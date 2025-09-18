@@ -99,6 +99,31 @@
             border-radius: 6px;
             font-size: 14px;
         }
+
+        /* 📱 ریسپانسیو برای موبایل */
+        @media (max-width: 600px) {
+            .model {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .model .actions {
+                margin-top: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .container {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 14px;
+                padding: 6px 10px;
+            }
+        }
     </style>
 </head>
 
@@ -130,6 +155,12 @@
             </div>
         </div>
         {% endfor %}
+
+        <!-- 📲 دکمه نصب PWA -->
+        <button id="installBtn"
+            style="display:none; margin-top:15px; background:#28a745; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer;">
+            📲 Install App
+        </button>
     </div>
 
     <script>
@@ -159,6 +190,30 @@
                 window.location.href = url;
             }
         }
+
+        // 📲 نصب PWA
+        let deferredPrompt;
+        const installBtn = document.getElementById("installBtn");
+
+        window.addEventListener("beforeinstallprompt", (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = "block";
+        });
+
+        installBtn.addEventListener("click", async () => {
+            installBtn.style.display = "none";
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === "accepted") {
+                    console.log("✅ کاربر اپ رو نصب کرد");
+                } else {
+                    console.log("❌ کاربر نصب رو رد کرد");
+                }
+                deferredPrompt = null;
+            }
+        });
     </script>
 </body>
 
