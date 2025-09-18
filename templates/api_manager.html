@@ -162,11 +162,18 @@
             <span>{{ model }} {% if info.active %}✅{% else %}❌{% endif %}</span>
             <div class="actions">
                 <button type="button" onclick="testModel('{{ model }}')" class="btn btn-test">🧪 Test</button>
-                <button type="button" onclick="toggleModel('{{ url_for('api_manager.toggle_model', model=model) }}')"
+        
+                <!-- Toggle -->
+                <button type="button" onclick="window.location.href='{{ url_for('api_manager.toggle_model', model=model) }}'"
                     class="btn btn-toggle">🔄 Toggle</button>
-                <button type="button" onclick="deleteModel('{{ url_for('api_manager.delete_model', model=model) }}')"
+        
+                <!-- Delete -->
+                <button type="button"
+                    onclick="if(confirm('آیا مطمئنی می‌خواهی حذف کنی؟')) window.location.href='{{ url_for('api_manager.delete_model', model=model) }}'"
                     class="btn btn-delete">🗑 Delete</button>
             </div>
+        </div>
+
         </div>
         {% endfor %}
     </div>
