@@ -1,0 +1,17 @@
+{
+  "google/gemini-2.0-flash-exp:free": {
+    "active": true
+  },
+  "moonshotai/kimi-k2:free": {
+    "active": true
+  },
+  "microsoft/mai-ds-r1:free": {
+    "active": true
+  },
+  "openai/gpt-oss-20b:free": {
+    "active": true
+  },
+  "meta-llama/llama-3.3-70b-instruct:free": {
+    "active": true
+  }
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Model Manager</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #f3f3f3;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        input,
+        button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px;
+        }
+
+        .model {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .model span {
+            flex: 1;
+        }
+
+        .model .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .model .actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+
+            width: 90px;
+            height: 40px;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+            border: none;
+        }
+
+        .model .actions .btn-test {
+            background: #007bff;
+        }
+
+        .model .actions .btn-test:hover {
+            background: #0056b3;
+        }
+
+        .model .actions .btn-toggle {
+            background: #ffc107;
+            color: black;
+        }
+
+        .model .actions .btn-toggle:hover {
+            background: #e0a800;
+        }
+
+        .model .actions .btn-delete {
+            background: #dc3545;
+        }
+
+        .model .actions .btn-delete:hover {
+            background: #a71d2a;
+        }
+
+        .link-button {
+            display: inline-block;
+            margin-bottom: 15px;
+            text-decoration: none;
+            color: white;
+            background: #007bff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>⚙️ OpenRouter Model Manager</h2>
+
+        <!-- 🔗 لینک مفید به لیست مدل‌ها -->
+        <a class="link-button" href="https://openrouter.ai/models" target="_blank">
+            🔍 Browse Available Models on OpenRouter.ai
+        </a>
+
+        <form method="POST">
+            <input type="text" name="model" placeholder="e.g. mistral/mistral-7b-instruct:free" required />
+            <label><input type="checkbox" name="active"> Active</label>
+            <button type="submit">➕ Add / Update Model</button>
+        </form>
+
+        <hr />
+        {% for model, info in config.items() %}
+        <div class="model">
+            <span>{{ model }} {% if info.active %}✅{% else %}❌{% endif %}</span>
+            <div class="actions">
+                <button type="button" onclick="testModel('{{ model }}')" class="btn btn-test">🧪 Test</button>
+                <button type="button" onclick="toggleModel('{{ url_for('api_manager.toggle_model', model=model) }}')"
+                    class="btn btn-toggle">🔄 Toggle</button>
+                <button type="button" onclick="deleteModel('{{ url_for('api_manager.delete_model', model=model) }}')"
+                    class="btn btn-delete">🗑 Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        async function testModel(model) {
+            try {
+                const resp = await fetch(`/api/test/${encodeURIComponent(model)}`);
+                const data = await resp.json();
+
+                if (data.error) {
+                    alert("❌ Error: " + data.error);
+                } else if (data.choices && data.choices[0].message && data.choices[0].message.content) {
+                    alert("✅ Model Response:\n\n" + data.choices[0].message.content);
+                } else {
+                    alert("ℹ️ Response received, but no content:\n\n" + JSON.stringify(data, null, 2));
+                }
+            } catch (err) {
+                alert("⚠️ Failed to test model: " + err);
+            }
+        }
+
+        function toggleModel(url) {
+            window.location.href = url;
+        }
+
+        function deleteModel(url) {
+            if (confirm("Are you sure you want to delete this model?")) {
+                window.location.href = url;
+            }
+        }
+    </script>
+</body>
+
+</html>
