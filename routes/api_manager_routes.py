@@ -147,3 +147,9 @@ def complete():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@api_manager_bp.route("/api/models", methods=["GET"])
+def get_models():
+    config = load_config()
+    return jsonify(config)
+
