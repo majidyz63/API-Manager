@@ -34,12 +34,13 @@ def manage_models():
     return render_template("api_manager.html", config=config)
 
 
-@api_manager_bp.route("/delete/<string:model>")
+@api_manager_bp.route("/delete/<path:model>")
 def delete_model(model):
     config = load_config()
     config.pop(model, None)
     save_config(config)
     return redirect("/")
+
 
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
@@ -92,7 +93,7 @@ def test_model(model):
         return jsonify({"error": str(e)}), 500
 
 
-@api_manager_bp.route("/toggle/<string:model>")
+@api_manager_bp.route("/toggle/<path:model>")
 def toggle_model(model):
     config = load_config()
     if model in config:
@@ -100,7 +101,6 @@ def toggle_model(model):
         config[model]["active"] = not current_status
         save_config(config)
     return redirect("/")
-
 
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
@@ -147,9 +147,3 @@ def complete():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@api_manager_bp.route("/api/models", methods=["GET"])
-def get_models():
-    config = load_config()
-    return jsonify(config)
-
