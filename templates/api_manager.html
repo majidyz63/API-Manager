@@ -11,7 +11,7 @@
             background: #f3f3f3;
             padding: 20px;
         }
-
+    
         .container {
             max-width: 600px;
             margin: auto;
@@ -19,14 +19,14 @@
             padding: 20px;
             border-radius: 10px;
         }
-
+    
         input,
         button {
             width: 100%;
             margin-top: 10px;
             padding: 10px;
         }
-
+    
         .model {
             display: flex;
             justify-content: space-between;
@@ -34,28 +34,28 @@
             padding: 8px 0;
             border-bottom: 1px solid #ddd;
         }
-
+    
         .model span {
             flex: 1;
         }
-
+    
         .model .actions {
             display: flex;
             gap: 10px;
         }
-
+    
         .model .actions .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-
+    
             width: 90px;
             height: 40px;
             line-height: 1;
             padding: 0;
             margin: 0;
-
+    
             border-radius: 4px;
             font-size: 14px;
             font-weight: 500;
@@ -63,32 +63,32 @@
             color: #fff;
             border: none;
         }
-
+    
         .model .actions .btn-test {
             background: #007bff;
         }
-
+    
         .model .actions .btn-test:hover {
             background: #0056b3;
         }
-
+    
         .model .actions .btn-toggle {
             background: #ffc107;
             color: black;
         }
-
+    
         .model .actions .btn-toggle:hover {
             background: #e0a800;
         }
-
+    
         .model .actions .btn-delete {
             background: #dc3545;
         }
-
+    
         .model .actions .btn-delete:hover {
             background: #a71d2a;
         }
-
+    
         .link-button {
             display: inline-block;
             margin-bottom: 15px;
@@ -99,7 +99,30 @@
             border-radius: 6px;
             font-size: 14px;
         }
+    
+        /* 📱 ریسپانسیو موبایل */
+        @media (max-width: 600px) {
+            .model {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+    
+            .model .actions {
+                margin-top: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                width: 100%;
+            }
+    
+            .model .actions .btn {
+                flex: 1 1 calc(50% - 6px);
+                /* دکمه‌ها در دو ستون */
+                min-width: 120px;
+            }
+        }
     </style>
+
 </head>
 
 <body>
