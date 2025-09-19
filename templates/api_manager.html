@@ -33,20 +33,15 @@
             align-items: center;
             padding: 8px 0;
             border-bottom: 1px solid #ddd;
-            gap: 10px;
         }
 
         .model span {
             flex: 1;
-            word-break: break-all;
-            /* ✅ اسم مدل‌های طولانی در موبایل نشکنه */
         }
 
         .model .actions {
             display: flex;
             gap: 10px;
-            flex-wrap: wrap;
-            /* ✅ تو موبایل بره خط بعد */
         }
 
         .model .actions .btn {
@@ -55,10 +50,11 @@
             justify-content: center;
             gap: 6px;
 
-            min-width: 80px;
-            height: 36px;
+            width: 90px;
+            height: 40px;
             line-height: 1;
-            padding: 0 8px;
+            padding: 0;
+            margin: 0;
 
             border-radius: 4px;
             font-size: 14px;
@@ -68,28 +64,28 @@
             border: none;
         }
 
-        .btn-test {
+        .model .actions .btn-test {
             background: #007bff;
         }
 
-        .btn-test:hover {
+        .model .actions .btn-test:hover {
             background: #0056b3;
         }
 
-        .btn-toggle {
+        .model .actions .btn-toggle {
             background: #ffc107;
             color: black;
         }
 
-        .btn-toggle:hover {
+        .model .actions .btn-toggle:hover {
             background: #e0a800;
         }
 
-        .btn-delete {
+        .model .actions .btn-delete {
             background: #dc3545;
         }
 
-        .btn-delete:hover {
+        .model .actions .btn-delete:hover {
             background: #a71d2a;
         }
 
@@ -102,39 +98,6 @@
             padding: 8px 12px;
             border-radius: 6px;
             font-size: 14px;
-        }
-
-        /* 📱 ریسپانسیو */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            .container {
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            input,
-            button {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            .model {
-                flex-direction: column;
-                /* آیتم‌ها زیر هم */
-                align-items: stretch;
-            }
-
-            .model .actions {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .model .actions .btn {
-                flex: 1;
-            }
         }
     </style>
 </head>
