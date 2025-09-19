@@ -158,10 +158,13 @@ def complete():
     
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
-    config = load_config()
+    try:
+        config = load_config()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     return jsonify(config or {})
 
+# alias برای سازگاری
 @api_manager_bp.route("/models", methods=["GET"])
 def models_alias():
     return get_models()
-
