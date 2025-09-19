@@ -34,16 +34,19 @@ def manage_models():
     return render_template("api_manager.html", config=config)
 
 
-@api_manager_bp.route("/delete/<path:model>")
-def delete_model(model):
+@api_manager_bp.route("/delete")
+def delete_model():
+    model = request.args.get("model")
     config = load_config()
-    config.pop(model, None)
-    save_config(config)
+    if model in config:
+        config.pop(model, None)
+        save_config(config)
     return redirect(url_for("api_manager.manage_models"))
 
 
-@api_manager_bp.route("/toggle/<path:model>")
-def toggle_model(model):
+@api_manager_bp.route("/toggle")
+def toggle_model():
+    model = request.args.get("model")
     config = load_config()
     if model in config:
         current_status = config[model].get("active", False)
