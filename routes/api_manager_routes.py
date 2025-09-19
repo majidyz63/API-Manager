@@ -9,6 +9,7 @@ CONFIG_FILE = "api_config.json"
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
+# ----------------- Helper functions -----------------
 def load_config():
     if not os.path.exists(CONFIG_FILE):
         return {}
@@ -21,11 +22,12 @@ def save_config(data):
         json.dump(data, f, indent=2)
 
 
+# ----------------- UI -----------------
 @api_manager_bp.route("/", methods=["GET", "POST"])
 def manage_models():
     config = load_config()
     if request.method == "POST":
-        model = request.form.get("model").strip()
+        model = request.form.get("model", "").strip()
         active = request.form.get("active") == "on"
         if model:
             config[model] = {"active": active}
@@ -34,6 +36,7 @@ def manage_models():
     return render_template("api_manager.html", config=config)
 
 
+# ----------------- Model management -----------------
 @api_manager_bp.route("/delete")
 def delete_model():
     model = request.args.get("model")
@@ -55,6 +58,7 @@ def toggle_model():
     return redirect(url_for("api_manager.manage_models"))
 
 
+# ----------------- API -----------------
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
@@ -64,8 +68,17 @@ def get_active_models():
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
-    config = load_config()
-    return jsonify(config)
+    try:
+        config = load_config()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    return jsonify(config or {})
+
+
+# alias برای سازگاری با UI
+@api_manager_bp.route("/models", methods=["GET"])
+def models_alias():
+    return get_models()
 
 
 @api_manager_bp.route("/api/test/<path:model>", methods=["GET"])
@@ -155,16 +168,3 @@ def complete():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
-@api_manager_bp.route("/api/models", methods=["GET"])
-def get_models():
-    try:
-        config = load_config()
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    return jsonify(config or {})
-
-# alias برای سازگاری
-@api_manager_bp.route("/models", methods=["GET"])
-def models_alias():
-    return get_models()
