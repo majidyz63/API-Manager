@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, jsonify, current_app
+from flask import Blueprint, render_template, request, redirect, jsonify, current_app, url_for
 import json
 import os
 import requests
@@ -30,7 +30,7 @@ def manage_models():
         if model:
             config[model] = {"active": active}
             save_config(config)
-        return redirect("/")
+        return redirect(url_for("api_manager.manage_models"))
     return render_template("api_manager.html", config=config)
 
 
@@ -39,7 +39,17 @@ def delete_model(model):
     config = load_config()
     config.pop(model, None)
     save_config(config)
-    return redirect("/")
+    return redirect(url_for("api_manager.manage_models"))
+
+
+@api_manager_bp.route("/toggle/<path:model>")
+def toggle_model(model):
+    config = load_config()
+    if model in config:
+        current_status = config[model].get("active", False)
+        config[model]["active"] = not current_status
+        save_config(config)
+    return redirect(url_for("api_manager.manage_models"))
 
 
 @api_manager_bp.route("/api/active-models")
@@ -47,6 +57,12 @@ def get_active_models():
     config = load_config()
     active = [name for name, info in config.items() if info.get("active")]
     return jsonify(active)
+
+
+@api_manager_bp.route("/api/models", methods=["GET"])
+def get_models():
+    config = load_config()
+    return jsonify(config)
 
 
 @api_manager_bp.route("/api/test/<path:model>", methods=["GET"])
@@ -66,7 +82,7 @@ def test_model(model):
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "Referer": "http://localhost:8000",   # ✅ اصلاح شد
+                "Referer": "http://localhost:8000",
                 "X-Title": "API Manager Central"
             },
             json=payload,
@@ -74,7 +90,6 @@ def test_model(model):
         )
         raw = resp.json()
 
-        # استخراج متن پاسخ یا خطا
         output = None
         if isinstance(raw, dict):
             if "choices" in raw and raw["choices"]:
@@ -91,16 +106,6 @@ def test_model(model):
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-@api_manager_bp.route("/toggle/<path:model>")
-def toggle_model(model):
-    config = load_config()
-    if model in config:
-        current_status = config[model].get("active", False)
-        config[model]["active"] = not current_status
-        save_config(config)
-    return redirect("/")
 
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
