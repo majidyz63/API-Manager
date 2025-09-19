@@ -164,3 +164,4 @@ def get_models():
 @api_manager_bp.route("/models", methods=["GET"])
 def models_alias():
     return get_models()
+
