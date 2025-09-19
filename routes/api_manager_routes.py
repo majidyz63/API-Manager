@@ -155,15 +155,12 @@ def complete():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-# مسیر اصلی
+    
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
     config = load_config()
     return jsonify(config or {})
 
-# مسیر سازگار با UI فعلی
 @api_manager_bp.route("/models", methods=["GET"])
 def models_alias():
-    # همون خروجی /api/models رو برگردون
-    config = load_config()
-    return jsonify(config or {})
+    return get_models()
