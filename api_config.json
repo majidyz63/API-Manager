@@ -1,7 +1,22 @@
 [
-  {"id": "google/gemini-2.0-flash-exp:free", "active": true},
-  {"id": "moonshotai/kimi-k2:free", "active": true},
-  {"id": "microsoft/mai-ds-r1:free", "active": true},
-  {"id": "openai/gpt-oss-20b:free", "active": true},
-  {"id": "meta-llama/llama-3.3-70b-instruct:free", "active": true}
+  {
+    "id": "google/gemini-2.0-flash-exp:free",
+    "active": true
+  },
+  {
+    "id": "moonshotai/kimi-k2:free",
+    "active": true
+  },
+  {
+    "id": "microsoft/mai-ds-r1:free",
+    "active": true
+  },
+  {
+    "id": "openai/gpt-oss-20b:free",
+    "active": true
+  },
+  {
+    "id": "meta-llama/llama-3.3-70b-instruct:free",
+    "active": true
+  }
 ]

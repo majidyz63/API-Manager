@@ -12,11 +12,7 @@ app.secret_key = "supersecretkey"
 # ثبت Blueprint
 app.register_blueprint(api_manager_bp)
 
-# ---------- Serve UI ----------
-@app.route("/")
-def home():
-    return render_template("index.html")
-
+# ---------- Serve static files ----------
 @app.route("/manifest.json")
 def manifest():
     return app.send_static_file("manifest.json")

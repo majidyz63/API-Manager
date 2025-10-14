@@ -61,23 +61,40 @@ def toggle_model():
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
+<<<<<<< HEAD
     # فرمت کامل برای سازگاری با Neo_AutoDev
     active = [{"id": m["id"], "active": m["active"]} for m in config if m.get("active")]
     return jsonify(active)
+=======
+    active = [{"id": name, "object": "model"} for name, info in config.items() if info.get("active")]
+    return jsonify({"data": active})
+>>>>>>> 60890cb (Fix Neo_AutoDev integration, update /api/complete and model manager logic)
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
     try:
         config = load_config()
+        models = [{"id": name, "object": "model", "active": info.get("active", False)} 
+                  for name, info in config.items()]
+        return jsonify({"data": models})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    return jsonify(config or {})
+
+
+# OpenAI-compatible /v1/models endpoint for Neo_AutoDev
+@api_manager_bp.route("/v1/models", methods=["GET"])
+def get_v1_models():
+    return get_active_models()
 
 
 # alias برای سازگاری با UI
 @api_manager_bp.route("/models", methods=["GET"])
 def models_alias():
-    return get_models()
+    try:
+        config = load_config()
+        return jsonify(config or {})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @api_manager_bp.route("/api/test/<path:model>", methods=["GET"])
@@ -123,47 +140,59 @@ def test_model(model):
         return jsonify({"error": str(e)}), 500
 
 
-@api_manager_bp.route("/api/complete", methods=["POST"])
-def complete():
+def _handle_completion_request():
+    """Shared completion logic for both /api/complete and /v1/chat/completions"""
     data = request.json
     model = data.get("model")
     messages = data.get("messages", [])
 
     config = load_config()
     if model not in config or not config[model].get("active", False):
-        return jsonify({"error": "❌ Model not active or not found"}), 400
+        return jsonify({"error": {"message": "Model not active or not found", "type": "invalid_request_error"}}), 400
 
     api_key = os.environ.get("OPENROUTER_API_KEY") or getattr(current_app, "openrouter_api_key", None)
     if not api_key:
-        return jsonify({"error": "❌ No OPENROUTER_API_KEY set"}), 500
+        return jsonify({"error": {"message": "No OPENROUTER_API_KEY set", "type": "authentication_error"}}), 500
 
     try:
+        # Forward all request parameters to OpenRouter
+        payload = {
+            "model": model,
+            "messages": messages
+        }
+        
+        # Pass through any additional parameters (temperature, max_tokens, etc.)
+        for key in ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty", "stream"]:
+            if key in data:
+                payload[key] = data[key]
+        
         resp = requests.post(
             OPENROUTER_URL,
             headers={
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
-                "Referer": "http://localhost:8000",
+                "HTTP-Referer": request.headers.get("Referer", "https://neo-autodev.koyeb.app"),
                 "X-Title": "API Manager Central"
             },
-            json={"model": model, "messages": messages},
+            json=payload,
             timeout=30
         )
-        raw = resp.json()
-
-        output = None
-        if isinstance(raw, dict):
-            if "choices" in raw and raw["choices"]:
-                output = raw["choices"][0]["message"]["content"]
-            elif "error" in raw:
-                output = f"❌ Error: {raw['error']}"
-            else:
-                output = str(raw)
-
-        return jsonify({
-            "model": model,
-            "output": output or "⚠️ No content returned from model",
-            "raw": raw
-        })
+        
+        # Return the raw OpenRouter response directly for Neo_AutoDev compatibility
+        return jsonify(resp.json()), resp.status_code
+        
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": {"message": str(e), "type": "api_error"}}), 500
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": {"message": str(e), "type": "internal_error"}}), 500
+
+
+@api_manager_bp.route("/api/complete", methods=["POST"])
+def complete():
+    return _handle_completion_request()
+
+
+# OpenAI-compatible /v1/chat/completions endpoint for Neo_AutoDev
+@api_manager_bp.route("/v1/chat/completions", methods=["POST"])
+def chat_completions():
+    return _handle_completion_request()
