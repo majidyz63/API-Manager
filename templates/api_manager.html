@@ -141,21 +141,24 @@
         </form>
 
         <hr />
-        {% for model, info in config.items() %}
-        <div class="model">
-            <span>{{ model }} {% if info.active %}✅{% else %}❌{% endif %}</span>
-            <div class="actions">
-                <button type="button" onclick="testModel('{{ model }}')" class="btn btn-test">🧪 Test</button>
-                <button type="button" onclick="window.location.href='{{ url_for('api_manager.toggle_model') }}?model={{ model }}'"
-                    class="btn btn-toggle">🔄 Toggle</button>
-                
-                <button type="button" onclick="if(confirm('Are you sure?')) 
-                                 window.location.href='{{ url_for('api_manager.delete_model') }}?model={{ model }}'"
-                    class="btn btn-delete">🗑 Delete</button>
+{% for model in config %}
+<div class="model">
+    <span>{{ model.id }}
+        {% if model.active %}✅{% else %}❌{% endif %}
+    </span>
+    <div class="actions">
+        <button type="button" onclick="testModel('{{ model.id }}')" class="btn btn-test">🧪 Test</button>
+        <button type="button"
+            onclick="window.location.href='{{ url_for('api_manager.toggle_model') }}?model={{ model.id }}'"
+            class="btn btn-toggle">🔄 Toggle</button>
 
-            </div>
-        </div>
-        {% endfor %}
+        <button type="button"
+            onclick="if(confirm('Are you sure?')) window.location.href='{{ url_for('api_manager.delete_model') }}?model={{ model.id }}'"
+            class="btn btn-delete">🗑 Delete</button>
+    </div>
+</div>
+{% endfor %}
+
     </div>
 
     <script>
