@@ -57,13 +57,12 @@ def toggle_model():
         save_config(config)
     return redirect(url_for("api_manager.manage_models"))
 
-
 # ----------------- API -----------------
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
-    # ساختار جدید: لیست از آبجکت‌ها، نه دیکشنری
-    active = [m["id"] for m in config if m.get("active")]
+    # فرمت کامل برای سازگاری با Neo_AutoDev
+    active = [{"id": m["id"], "active": m["active"]} for m in config if m.get("active")]
     return jsonify(active)
 
 @api_manager_bp.route("/api/models", methods=["GET"])
