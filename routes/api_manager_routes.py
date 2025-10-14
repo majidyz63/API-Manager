@@ -62,9 +62,9 @@ def toggle_model():
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
-    active = [name for name, info in config.items() if info.get("active")]
+    # ساختار جدید: لیست از آبجکت‌ها، نه دیکشنری
+    active = [m["id"] for m in config if m.get("active")]
     return jsonify(active)
-
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
