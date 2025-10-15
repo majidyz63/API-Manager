@@ -48,7 +48,18 @@ def manage_models():
         model = request.form.get("model", "").strip()
         active = request.form.get("active") == "on"
         if model:
-            config[model] = {"active": active}
+            # جست‌وجو برای مدل در لیست
+            model_exists = False
+            for item in config:
+                if isinstance(item, dict) and item.get("id") == model:
+                    item["active"] = active
+                    model_exists = True
+                    break
+            
+            # اگر مدل جدید است، اضافه کن
+            if not model_exists:
+                config.append({"id": model, "active": active})
+            
             save_config(config)
         return redirect(url_for("api_manager.manage_models"))
     return render_template("api_manager.html", config=config)
@@ -57,7 +68,7 @@ def manage_models():
 # ----------------- Model management -----------------
 @api_manager_bp.route("/delete")
 def delete_model():
-    """حذف مدل از فایل config"""
+    """حذف مدل از فایل config (لیست)"""
     model = request.args.get("model")
     print(f"[INFO] Delete request received for model: {model}")
     
@@ -66,25 +77,33 @@ def delete_model():
         return redirect(url_for("api_manager.manage_models"))
     
     config = load_config()
-    print(f"[DEBUG] Current config before delete: {config}")
+    print(f"[DEBUG] Current config before delete (type: {type(config).__name__}): {config}")
     
-    if model in config:
-        del config[model]
-        print(f"[INFO] Model '{model}' removed from config")
-        
-        if save_config(config):
-            print(f"[SUCCESS] Config saved after deleting model '{model}'")
+    # پیدا کردن و حذف مدل از لیست
+    model_found = False
+    new_config = []
+    
+    for item in config:
+        if isinstance(item, dict) and item.get("id") == model:
+            model_found = True
+            print(f"[INFO] Model '{model}' found and will be removed")
+        else:
+            new_config.append(item)
+    
+    if model_found:
+        if save_config(new_config):
+            print(f"[SUCCESS] Model '{model}' deleted and config saved successfully")
         else:
             print(f"[ERROR] Failed to save config after deleting model '{model}'")
     else:
-        print(f"[WARNING] Model '{model}' not found in config")
+        print(f"[WARNING] Model '{model}' not found in config list")
     
     return redirect(url_for("api_manager.manage_models"))
 
 
 @api_manager_bp.route("/toggle")
 def toggle_model():
-    """تغییر وضعیت فعال/غیرفعال مدل"""
+    """تغییر وضعیت فعال/غیرفعال مدل (در لیست)"""
     model = request.args.get("model")
     print(f"[INFO] Toggle request received for model: {model}")
     
@@ -93,21 +112,28 @@ def toggle_model():
         return redirect(url_for("api_manager.manage_models"))
     
     config = load_config()
-    print(f"[DEBUG] Current config before toggle: {config}")
+    print(f"[DEBUG] Current config before toggle (type: {type(config).__name__}): {config}")
     
-    if model in config:
-        current_status = config[model].get("active", False)
-        new_status = not current_status
-        config[model]["active"] = new_status
-        
-        print(f"[INFO] Toggling model '{model}': {current_status} -> {new_status}")
-        
-        if save_config(config):
-            print(f"[SUCCESS] Config saved after toggling model '{model}'")
-        else:
-            print(f"[ERROR] Failed to save config after toggling model '{model}'")
-    else:
-        print(f"[WARNING] Model '{model}' not found in config")
+    # پیدا کردن و toggle کردن مدل در لیست
+    model_found = False
+    
+    for item in config:
+        if isinstance(item, dict) and item.get("id") == model:
+            model_found = True
+            current_status = item.get("active", False)
+            new_status = not current_status
+            item["active"] = new_status
+            
+            print(f"[INFO] Toggling model '{model}': {current_status} -> {new_status}")
+            
+            if save_config(config):
+                print(f"[SUCCESS] Model '{model}' toggled and config saved successfully")
+            else:
+                print(f"[ERROR] Failed to save config after toggling model '{model}'")
+            break
+    
+    if not model_found:
+        print(f"[WARNING] Model '{model}' not found in config list")
     
     return redirect(url_for("api_manager.manage_models"))
 
@@ -115,15 +141,18 @@ def toggle_model():
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
-    active = [{"id": name, "object": "model"} for name, info in config.items() if info.get("active")]
+    # فیلتر مدل‌های فعال از لیست
+    active = [{"id": item.get("id"), "object": "model"} 
+              for item in config if isinstance(item, dict) and item.get("active")]
     return jsonify({"data": active})
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
     try:
         config = load_config()
-        models = [{"id": name, "object": "model", "active": info.get("active", False)} 
-                  for name, info in config.items()]
+        # تبدیل لیست به فرمت مناسب با اضافه کردن object
+        models = [{"id": item.get("id"), "object": "model", "active": item.get("active", False)} 
+                  for item in config if isinstance(item, dict)]
         return jsonify({"data": models})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -195,7 +224,15 @@ def _handle_completion_request():
     messages = data.get("messages", [])
 
     config = load_config()
-    if model not in config or not config[model].get("active", False):
+    
+    # بررسی فعال بودن مدل در لیست
+    model_active = False
+    for item in config:
+        if isinstance(item, dict) and item.get("id") == model and item.get("active", False):
+            model_active = True
+            break
+    
+    if not model_active:
         return jsonify({"error": {"message": "Model not active or not found", "type": "invalid_request_error"}}), 400
 
     api_key = os.environ.get("OPENROUTER_API_KEY") or getattr(current_app, "openrouter_api_key", None)
