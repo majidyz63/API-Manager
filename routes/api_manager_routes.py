@@ -282,55 +282,45 @@ from flask import Response
 import json
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
-def complete():
-    """
-    Compatible completion endpoint for Neo_AutoDev and manual tests.
-    Simulates an AI response instead of calling external APIs.
-    """
+def complete_request():
+    """Handle completion requests from Neo_AutoDev or clients"""
     try:
-        data = request.get_json(force=True) or {}
-
+        data = request.get_json(force=True)
         model = data.get("model")
         messages = data.get("messages", [])
-        prompt = data.get("prompt", "")
 
-        if not model:
-            return jsonify({"error": "Missing model parameter"}), 400
+        if not model or not messages:
+            return jsonify({"error": "Missing 'model' or 'messages'"}), 400
 
-        user_message = ""
-        if messages and isinstance(messages, list):
-            for msg in messages:
-                if msg.get("role") == "user":
-                    user_message += msg.get("content", "") + "\n"
-        elif isinstance(prompt, str):
-            user_message = prompt
-
-        user_message = user_message.strip() or "(no input received)"
-
-        # Debug logs
-        print(f"✅ /api/complete triggered for model: {model}")
-        print(f"🗣 User said: {user_message}")
-
-        # Construct proper response
-        fake_response = {
-            "choices": [
+        # Simulate AI response as structured JSON for Neo_AutoDev
+        last_message = messages[-1].get("content", "")
+        response_json = {
+            "files": [
                 {
-                    "message": {
-                        "role": "assistant",
-                        "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message}"
-                    }
+                    "operation": "create",
+                    "path": "app.py",
+                    "content": f'''from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Hello from Neo_AutoDev! User said: {last_message}"
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+''',
+                    "reason": f"Generated Flask entry point responding to: '{last_message}'"
                 }
-            ]
+            ],
+            "commands": ["pip install flask"],
+            "summary": "Generated a basic Flask app"
         }
 
-        # Use Response to avoid jsonify auto-formatting issue
-        response_json = json.dumps(fake_response, ensure_ascii=False, indent=2)
-        return Response(response_json, status=200, mimetype="application/json")
+        return jsonify(response_json), 200
 
     except Exception as e:
-        print("❌ Error in /api/complete:", str(e))
         return jsonify({"error": str(e)}), 500
-
 
 # OpenAI-compatible /v1/chat/completions endpoint for Neo_AutoDev
 @api_manager_bp.route("/v1/chat/completions", methods=["POST"])
