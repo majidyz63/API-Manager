@@ -283,44 +283,60 @@ import json
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete_request():
-    """Handle completion requests from Neo_AutoDev or clients"""
+    """Handle completion requests for Neo_AutoDev and regular clients"""
     try:
         data = request.get_json(force=True)
         model = data.get("model")
         messages = data.get("messages", [])
+        neo_mode = data.get("neo_mode", True)  # auto-detect Neo mode
 
         if not model or not messages:
             return jsonify({"error": "Missing 'model' or 'messages'"}), 400
 
-        # Simulate AI response as structured JSON for Neo_AutoDev
         last_message = messages[-1].get("content", "")
-        response_json = {
-            "files": [
-                {
-                    "operation": "create",
-                    "path": "app.py",
-                    "content": f'''from flask import Flask
+
+        if neo_mode:
+            # JSON structure for Neo_AutoDev (so it can create files)
+            response_json = {
+                "files": [
+                    {
+                        "operation": "create",
+                        "path": "app.py",
+                        "content": f'''from flask import Flask
 
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Hello from Neo_AutoDev! User said: {last_message}"
+    return "Hello Neo_AutoDev! User said: {last_message}"
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
 ''',
-                    "reason": f"Generated Flask entry point responding to: '{last_message}'"
-                }
-            ],
-            "commands": ["pip install flask"],
-            "summary": "Generated a basic Flask app"
-        }
-
-        return jsonify(response_json), 200
+                        "reason": "Generated a basic Flask app for Neo_AutoDev"
+                    }
+                ],
+                "commands": ["pip install flask"],
+                "summary": "Created a basic Flask API"
+            }
+            return jsonify(response_json), 200
+        else:
+            # OpenAI-compatible structure
+            response_json = {
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": f"Flask app generated. User said: {last_message}"
+                        }
+                    }
+                ]
+            }
+            return jsonify(response_json), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # OpenAI-compatible /v1/chat/completions endpoint for Neo_AutoDev
 @api_manager_bp.route("/v1/chat/completions", methods=["POST"])
