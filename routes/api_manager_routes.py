@@ -278,7 +278,6 @@ def _handle_completion_request():
     except Exception as e:
         return jsonify({"error": {"message": str(e), "type": "internal_error"}}), 500
 
-
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete():
     """
@@ -304,10 +303,13 @@ def complete():
         elif isinstance(prompt, str):
             user_message = prompt
 
-        # Make sure we have some text to simulate
         user_message = user_message.strip() or "(no input received)"
 
-        # Construct fake response
+        # Log to verify Koyeb deployment
+        print(f"✅ /api/complete endpoint triggered successfully for model: {model}")
+        print(f"🗣 User message received: {user_message}")
+
+        # Construct fake response for testing
         fake_response = {
             "choices": [
                 {
@@ -319,9 +321,15 @@ def complete():
             ]
         }
 
+        # ✅ Use json.dumps to ensure it's fully serialized and visible in PowerShell
+        import json
+        response_text = json.dumps(fake_response, ensure_ascii=False, indent=2)
+        print("📦 Final response JSON:\n", response_text)
+
         return jsonify(fake_response), 200
 
     except Exception as e:
+        print("❌ Error in /api/complete:", str(e))
         return jsonify({"error": str(e)}), 500
 
 
