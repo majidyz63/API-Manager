@@ -282,12 +282,10 @@ def _handle_completion_request():
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete():
     """
-    Unified completion endpoint compatible with Neo_AutoDev.
-    Accepts both 'prompt' and 'messages' formats.
-    Returns a valid JSON structure similar to OpenAI responses.
+    Compatible completion endpoint for Neo_AutoDev and manual tests.
+    Simulates an AI response instead of calling external APIs.
     """
     try:
-        # 🟢 همیشه JSON ورودی رو امن بخون (حتی اگر header اشتباه باشه)
         data = request.get_json(force=True) or {}
 
         model = data.get("model")
@@ -295,9 +293,9 @@ def complete():
         prompt = data.get("prompt", "")
 
         if not model:
-            return jsonify({"error": "Missing 'model' parameter"}), 400
+            return jsonify({"error": "Missing model parameter"}), 400
 
-        # 🧠 استخراج متن کاربر از messages یا prompt
+        # Extract user message text
         user_message = ""
         if messages and isinstance(messages, list):
             for msg in messages:
@@ -306,21 +304,16 @@ def complete():
         elif isinstance(prompt, str):
             user_message = prompt
 
-        # 🧩 ساخت payload نهایی (در آینده برای اتصال به OpenRouter)
-        payload = {"model": model, "input": user_message.strip()}
+        # Make sure we have some text to simulate
+        user_message = user_message.strip() or "(no input received)"
 
-        # 🔹 عبور دادن پارامترهای اختیاری (temperature, max_tokens, ...)
-        for key in ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty", "stream"]:
-            if key in data:
-                payload[key] = data[key]
-
-        # ✅ شبیه‌سازی پاسخ (برای تست Neo_AutoDev)
+        # Construct fake response
         fake_response = {
             "choices": [
                 {
                     "message": {
                         "role": "assistant",
-                        "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message.strip() or '(no content)'}"
+                        "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message}"
                     }
                 }
             ]
@@ -330,8 +323,6 @@ def complete():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
 
 
 # OpenAI-compatible /v1/chat/completions endpoint for Neo_AutoDev
