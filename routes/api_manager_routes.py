@@ -278,7 +278,46 @@ def _handle_completion_request():
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete():
-    return _handle_completion_request()
+    try:
+        data = request.get_json(force=True)
+
+        model = data.get("model")
+        messages = data.get("messages")
+        prompt = data.get("prompt")
+
+        if not model:
+            return jsonify({"error": "Missing model"}), 400
+
+        # پشتیبانی از دو حالت مختلف: messages یا prompt ساده
+        if messages and isinstance(messages, list):
+            user_message = ""
+            for msg in messages:
+                if msg.get("role") == "user":
+                    user_message += msg.get("content", "") + "\n"
+        else:
+            user_message = prompt or "No input provided"
+
+        # ساخت payload نهایی برای لاجیک هوش مصنوعی
+        payload = {
+            "model": model,
+            "input": user_message.strip()
+        }
+
+        # شبیه‌سازی پاسخ برای Neo_AutoDev (در آینده می‌تونه به OpenRouter وصل بشه)
+        fake_response = {
+            "choices": [{
+                "message": {
+                    "role": "assistant",
+                    "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message.strip()}"
+                }
+            }]
+        }
+
+        return jsonify(fake_response), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 # OpenAI-compatible /v1/chat/completions endpoint for Neo_AutoDev
