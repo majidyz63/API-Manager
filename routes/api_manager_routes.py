@@ -57,7 +57,8 @@ def manage_models():
                     break
             
             # اگر مدل جدید است، اضافه کن
-            if not model_exists:
+            if not isinstance(config, list):
+                config = []
                 config.append({"id": model, "active": active})
             
             save_config(config)
@@ -223,9 +224,10 @@ def test_model(model):
 
 def _handle_completion_request():
     """Shared completion logic for both /api/complete and /v1/chat/completions"""
-    data = request.json
+    data = request.get_json(force=True) or {}
     model = data.get("model")
     messages = data.get("messages", [])
+
 
     config = load_config()
     
@@ -254,6 +256,7 @@ def _handle_completion_request():
         for key in ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty", "stream"]:
             if key in data:
                 payload[key] = data[key]
+
         
         resp = requests.post(
             OPENROUTER_URL,
