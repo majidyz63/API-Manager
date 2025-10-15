@@ -278,6 +278,9 @@ def _handle_completion_request():
     except Exception as e:
         return jsonify({"error": {"message": str(e), "type": "internal_error"}}), 500
 
+from flask import Response
+import json
+
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete():
     """
@@ -294,7 +297,6 @@ def complete():
         if not model:
             return jsonify({"error": "Missing model parameter"}), 400
 
-        # Extract user message text
         user_message = ""
         if messages and isinstance(messages, list):
             for msg in messages:
@@ -305,11 +307,11 @@ def complete():
 
         user_message = user_message.strip() or "(no input received)"
 
-        # Log to verify Koyeb deployment
-        print(f"✅ /api/complete endpoint triggered successfully for model: {model}")
-        print(f"🗣 User message received: {user_message}")
+        # Debug logs
+        print(f"✅ /api/complete triggered for model: {model}")
+        print(f"🗣 User said: {user_message}")
 
-        # Construct fake response for testing
+        # Construct proper response
         fake_response = {
             "choices": [
                 {
@@ -321,12 +323,9 @@ def complete():
             ]
         }
 
-        # ✅ Use json.dumps to ensure it's fully serialized and visible in PowerShell
-        import json
-        response_text = json.dumps(fake_response, ensure_ascii=False, indent=2)
-        print("📦 Final response JSON:\n", response_text)
-
-        return jsonify(fake_response), 200
+        # Use Response to avoid jsonify auto-formatting issue
+        response_json = json.dumps(fake_response, ensure_ascii=False, indent=2)
+        return Response(response_json, status=200, mimetype="application/json")
 
     except Exception as e:
         print("❌ Error in /api/complete:", str(e))
