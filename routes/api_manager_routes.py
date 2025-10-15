@@ -61,14 +61,8 @@ def toggle_model():
 @api_manager_bp.route("/api/active-models")
 def get_active_models():
     config = load_config()
-<<<<<<< HEAD
-    # فرمت کامل برای سازگاری با Neo_AutoDev
-    active = [{"id": m["id"], "active": m["active"]} for m in config if m.get("active")]
-    return jsonify(active)
-=======
     active = [{"id": name, "object": "model"} for name, info in config.items() if info.get("active")]
     return jsonify({"data": active})
->>>>>>> 60890cb (Fix Neo_AutoDev integration, update /api/complete and model manager logic)
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
