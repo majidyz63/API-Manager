@@ -281,45 +281,56 @@ def _handle_completion_request():
 
 @api_manager_bp.route("/api/complete", methods=["POST"])
 def complete():
+    """
+    Unified completion endpoint compatible with Neo_AutoDev.
+    Accepts both 'prompt' and 'messages' formats.
+    Returns a valid JSON structure similar to OpenAI responses.
+    """
     try:
-        data = request.get_json(force=True)
+        # 🟢 همیشه JSON ورودی رو امن بخون (حتی اگر header اشتباه باشه)
+        data = request.get_json(force=True) or {}
 
         model = data.get("model")
-        messages = data.get("messages")
-        prompt = data.get("prompt")
+        messages = data.get("messages", [])
+        prompt = data.get("prompt", "")
 
         if not model:
-            return jsonify({"error": "Missing model"}), 400
+            return jsonify({"error": "Missing 'model' parameter"}), 400
 
-        # پشتیبانی از دو حالت مختلف: messages یا prompt ساده
+        # 🧠 استخراج متن کاربر از messages یا prompt
+        user_message = ""
         if messages and isinstance(messages, list):
-            user_message = ""
             for msg in messages:
                 if msg.get("role") == "user":
                     user_message += msg.get("content", "") + "\n"
-        else:
-            user_message = prompt or "No input provided"
+        elif isinstance(prompt, str):
+            user_message = prompt
 
-        # ساخت payload نهایی برای لاجیک هوش مصنوعی
-        payload = {
-            "model": model,
-            "input": user_message.strip()
-        }
+        # 🧩 ساخت payload نهایی (در آینده برای اتصال به OpenRouter)
+        payload = {"model": model, "input": user_message.strip()}
 
-        # شبیه‌سازی پاسخ برای Neo_AutoDev (در آینده می‌تونه به OpenRouter وصل بشه)
+        # 🔹 عبور دادن پارامترهای اختیاری (temperature, max_tokens, ...)
+        for key in ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty", "stream"]:
+            if key in data:
+                payload[key] = data[key]
+
+        # ✅ شبیه‌سازی پاسخ (برای تست Neo_AutoDev)
         fake_response = {
-            "choices": [{
-                "message": {
-                    "role": "assistant",
-                    "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message.strip()}"
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": f"✅ Simulated completion for model: {model}\nUser said:\n{user_message.strip() or '(no content)'}"
+                    }
                 }
-            }]
+            ]
         }
 
         return jsonify(fake_response), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 
 
