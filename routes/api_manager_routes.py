@@ -142,9 +142,13 @@ def toggle_model():
 def get_active_models():
     config = load_config()
     # فیلتر مدل‌های فعال از لیست
-    active = [{"id": item.get("id"), "object": "model"} 
-              for item in config if isinstance(item, dict) and item.get("active")]
-    return jsonify({"data": active})
+    active = [
+        {"id": item.get("id"), "active": True}
+        for item in config
+        if isinstance(item, dict) and item.get("active")
+    ]
+    return jsonify(active)
+
 
 @api_manager_bp.route("/api/models", methods=["GET"])
 def get_models():
