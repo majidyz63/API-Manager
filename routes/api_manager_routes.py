@@ -5,21 +5,39 @@ import requests
 
 api_manager_bp = Blueprint("api_manager", __name__)
 
-CONFIG_FILE = "api_config.json"
+# مسیر کامل فایل config در کنار app.py
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+CONFIG_FILE = os.path.join(BASE_DIR, "api_config.json")
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
 # ----------------- Helper functions -----------------
 def load_config():
-    if not os.path.exists(CONFIG_FILE):
+    """بارگذاری تنظیمات از فایل JSON"""
+    try:
+        if not os.path.exists(CONFIG_FILE):
+            print(f"[INFO] Config file not found at {CONFIG_FILE}, returning empty config")
+            return {}
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            print(f"[INFO] Config loaded successfully from {CONFIG_FILE}")
+            return config
+    except Exception as e:
+        print(f"[ERROR] Failed to load config: {e}")
         return {}
-    with open(CONFIG_FILE, "r") as f:
-        return json.load(f)
 
 
 def save_config(data):
-    with open(CONFIG_FILE, "w") as f:
-        json.dump(data, f, indent=2)
+    """ذخیره تنظیمات در فایل JSON"""
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        print(f"[INFO] Config saved successfully to {CONFIG_FILE}")
+        print(f"[DEBUG] Saved data: {data}")
+        return True
+    except Exception as e:
+        print(f"[ERROR] Failed to save config: {e}")
+        return False
 
 
 # ----------------- UI -----------------
@@ -39,22 +57,58 @@ def manage_models():
 # ----------------- Model management -----------------
 @api_manager_bp.route("/delete")
 def delete_model():
+    """حذف مدل از فایل config"""
     model = request.args.get("model")
+    print(f"[INFO] Delete request received for model: {model}")
+    
+    if not model:
+        print("[WARNING] No model parameter provided for delete")
+        return redirect(url_for("api_manager.manage_models"))
+    
     config = load_config()
+    print(f"[DEBUG] Current config before delete: {config}")
+    
     if model in config:
-        config.pop(model, None)
-        save_config(config)
+        del config[model]
+        print(f"[INFO] Model '{model}' removed from config")
+        
+        if save_config(config):
+            print(f"[SUCCESS] Config saved after deleting model '{model}'")
+        else:
+            print(f"[ERROR] Failed to save config after deleting model '{model}'")
+    else:
+        print(f"[WARNING] Model '{model}' not found in config")
+    
     return redirect(url_for("api_manager.manage_models"))
 
 
 @api_manager_bp.route("/toggle")
 def toggle_model():
+    """تغییر وضعیت فعال/غیرفعال مدل"""
     model = request.args.get("model")
+    print(f"[INFO] Toggle request received for model: {model}")
+    
+    if not model:
+        print("[WARNING] No model parameter provided for toggle")
+        return redirect(url_for("api_manager.manage_models"))
+    
     config = load_config()
+    print(f"[DEBUG] Current config before toggle: {config}")
+    
     if model in config:
         current_status = config[model].get("active", False)
-        config[model]["active"] = not current_status
-        save_config(config)
+        new_status = not current_status
+        config[model]["active"] = new_status
+        
+        print(f"[INFO] Toggling model '{model}': {current_status} -> {new_status}")
+        
+        if save_config(config):
+            print(f"[SUCCESS] Config saved after toggling model '{model}'")
+        else:
+            print(f"[ERROR] Failed to save config after toggling model '{model}'")
+    else:
+        print(f"[WARNING] Model '{model}' not found in config")
+    
     return redirect(url_for("api_manager.manage_models"))
 
 # ----------------- API -----------------
